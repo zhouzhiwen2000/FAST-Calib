@@ -118,12 +118,13 @@ Params loadParameters(ros::NodeHandle &nh) {
   return params;
 }
 
-double ComputeRMSE(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud1, 
+double computeRMSE(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud1, 
                    const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud2) 
 {
     if (cloud1->size() != cloud2->size()) 
     {
-      throw std::invalid_argument("Point cloud sizes do not match, cannot compute RMSE.");
+      std::cerr << BOLDRED << "[computeRMSE] Point cloud sizes do not match, cannot compute RMSE." << RESET << std::endl;
+      return -1.0;
     }
 
     double sum = 0.0;
@@ -214,6 +215,11 @@ void projectPointCloudToImage(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud,
 void saveCalibrationResults(const Params& params, const Eigen::Matrix4f& transformation, 
      const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& colored_cloud, const cv::Mat& img_input)
 {
+  if(colored_cloud->empty()) 
+  {
+    std::cerr << BOLDRED << "[saveCalibrationResults] Colored point cloud is empty!" << RESET << std::endl;
+    return;
+  }
   std::string outputDir = params.output_path;
   if (outputDir.back() != '/') outputDir += '/';
 
@@ -267,7 +273,11 @@ void sortPatternCenters(pcl::PointCloud<pcl::PointXYZ>::Ptr pc, pcl::PointCloud<
   // 0 -- 1
   // |    |
   // 3 -- 2
-
+  if(pc->size() != 4) 
+  {
+    std::cerr << BOLDRED << "[sortPatternCenters] Number of " << axis_mode << " center points to be sorted is not 4." << RESET << std::endl;
+    return;
+  }
   if (v->empty()) {
     v->clear();
     v->reserve(4);
