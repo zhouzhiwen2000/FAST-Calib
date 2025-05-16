@@ -30,7 +30,7 @@
   # p2: -0.000201478932371979
 
 # Calibration target parameters
-  marker_size: 0.2 # ArUco marker size
+  marker_size: 0.20 # ArUco marker size (our test data uses 0.16m; adjust to match your marker size)
   delta_width_qr_center: 0.55 # Half the distance between the centers of two markers in the horizontal direction 
   delta_height_qr_center: 0.35 # Half the distance between the centers of two markers in the vertical direction
   delta_width_circles: 0.5 # Distance between the centers of two circles in the horizontal direction

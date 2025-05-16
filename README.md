@@ -13,7 +13,7 @@ FAST-Calib is an automatic target-based extrinsic calibration tool for LiDAR-cam
 
 <p align="center">
   <img src="./pics/calib.jpg" width="100%">
-  <font color=#a0a0a0 size=2>Left: Example of circle extraction from Mid360 point cloud. Right: Point cloud colored with calibrated extrinsic.</font>
+  <font color=#a0a0a0 size=2>Left: Example of circle extraction from Mid360 point cloud | Right: Point cloud colored with calibrated extrinsic.</font>
 </p>
 
 ## 1. Prerequisites
@@ -30,11 +30,16 @@ roslaunch fast_calib calib.launch
 ```
 
 ## 3. Run on your own sensor suite
-1. Customize the [calibration target](https://github.com/xuankuzcr/FAST-Calib/blob/main/pics/calibration_target.jpg).
+1. Customize the calibration target in the image below.
 2. Record data to rosbag.
 3. Provide the instrinsic matrix in `qr_params.yaml`.
 4. Set distance filter in `qr_params.yaml` for board point cloud (extra points are acceptable).
 5. Calibrate now!
+
+<p align="center">
+  <img src="./pics/calibration_target.jpg" width="100%">
+  <font color=#a0a0a0 size=2>Left: Actual calibration target | Right: Technical drawing with annotated dimensions.</font>
+</p>
 
 ## 4. Appendix
 Related article is coming soon...

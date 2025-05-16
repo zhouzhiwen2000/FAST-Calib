@@ -57,8 +57,12 @@ int main(int argc, char **argv)
     aligned_lidar_centers->reserve(lidar_centers->size());
     alignPointCloud(lidar_centers, aligned_lidar_centers, transformation);
     
-    std::cout << BOLDYELLOW << "[Result] RMSE: " << BOLDRED << std::fixed << std::setprecision(4)
-              << computeRMSE(qr_centers, aligned_lidar_centers) << " m" << RESET << std::endl;
+    double rmse = computeRMSE(qr_centers, aligned_lidar_centers);
+    if (rmse > 0) 
+    {
+      std::cout << BOLDYELLOW << "[Result] RMSE: " << BOLDRED << std::fixed << std::setprecision(4)
+      << rmse << " m" << RESET << std::endl;
+    }
 
     std::cout << BOLDYELLOW << "[Result] Extrinsic parameters T_cam_lidar: " << RESET << std::endl;
     std::cout << BOLDCYAN << std::fixed << std::setprecision(6) << transformation << RESET << std::endl;
