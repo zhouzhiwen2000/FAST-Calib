@@ -1,13 +1,20 @@
 # FAST-Calib
-FAST-Calib is an automatic target-based extrinsic calibration tool for LiDAR-camera systems (eg., [FAST-LIVO2](https://github.com/hku-mars/FAST-LIVO2)). 
+
+## FAST-Calib: LiDAR-Camera Extrinsic Calibration in One Second
+
+FAST-Calib is an efficient target-based extrinsic calibration tool for LiDAR-camera systems (eg., [FAST-LIVO2](https://github.com/hku-mars/FAST-LIVO2)). 
 
 **Key highlights include:** 
 
 1. Support solid-state and mechanical LiDAR.
 2. No need for any initial extrinsic parameters.
-3. Achieve highly accurate calibration results **in just 2 seconds**.
+3. Achieve highly accurate calibration results **in just one seconds**.
 
-**In short, it makes extrinsic calibration as simple as intrinsic calibration.**
+In short, it makes extrinsic calibration as simple as intrinsic calibration.
+
+**Related paper:** 
+
+[FAST-Calib: LiDAR-Camera Extrinsic Calibration in One Second](https://www.arxiv.org/pdf/2507.17210)
 
 📬 For further assistance or inquiries, please feel free to contact Chunran Zheng at zhengcr@connect.hku.hk.
 
@@ -42,8 +49,6 @@ roslaunch fast_calib calib.launch
 </p>
 
 ## 4. Appendix
-Related article is coming soon...
-
 The calibration target design is based on the [velo2cam_calibration](https://github.com/beltransen/velo2cam_calibration).
 
 For further details on the algorithm workflow, see [this document](https://github.com/xuankuzcr/FAST-Calib/blob/main/workflow.md).
