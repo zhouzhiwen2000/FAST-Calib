@@ -48,7 +48,7 @@ int main(int argc, char **argv)
     sortPatternCenters(lidar_center_cloud, lidar_centers, "lidar");
 
     // 保存中间结果：排序后的 LiDAR 圆心和 QR 圆心
-    savemidresult(lidar_centers, qr_centers, params);
+    saveTargetHoleCenters(lidar_centers, qr_centers, params);
 
     // 计算外参
     Eigen::Matrix4f transformation;
@@ -67,7 +67,7 @@ int main(int argc, char **argv)
       << rmse << " m" << RESET << std::endl;
     }
 
-    std::cout << BOLDYELLOW << "[Result] Extrinsic parameters T_cam_lidar: " << RESET << std::endl;
+    std::cout << BOLDYELLOW << "[Result] Single-scene calibration: extrinsic parameters T_cam_lidar = " << RESET << std::endl;
     std::cout << BOLDCYAN << std::fixed << std::setprecision(6) << transformation << RESET << std::endl;
 
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr colored_cloud(new pcl::PointCloud<pcl::PointXYZRGB>);

@@ -8,13 +8,78 @@
 #include <string>
 #include <iomanip>
 #include <sys/stat.h>
-#include "multi_process.hpp"
+#include <cmath>
 #include "common_lib.h"
 #include "data_preprocess.hpp"
 
-using Eigen::Vector3d;
+struct RigidResult 
+{
+  Eigen::Matrix3d R;
+  Eigen::Vector3d t;
+  double rms = 0.0;
+  bool ok = false;
+};
+struct Block {
+  std::string time_line;
+  std::vector<Eigen::Vector3d> lidar_pts; // 4
+  std::vector<Eigen::Vector3d> qr_pts;    // 4
+};
 
-static bool parseCentersLine(const std::string& line, std::vector<Vector3d>& out_pts)
+RigidResult SolveRigidTransformWeighted(
+    const std::vector<Eigen::Vector3d>& lidar_pts,
+    const std::vector<Eigen::Vector3d>& cam_pts,
+    const std::vector<double>* weights = nullptr)
+{
+    RigidResult out; out.ok = false;
+    const size_t N = lidar_pts.size();
+    if (N < 3 || cam_pts.size() != N) return out;
+
+    std::vector<double> w(N, 1.0);
+    if (weights && weights->size() == N) w = *weights;
+    double wsum = 0.0;
+    for (double wi : w) wsum += wi;
+    if (wsum <= 0) return out;
+
+    Eigen::Vector3d muL = Eigen::Vector3d::Zero();
+    Eigen::Vector3d muC = Eigen::Vector3d::Zero();
+    for (size_t i = 0; i < N; ++i) 
+    {
+        muL += w[i] * lidar_pts[i];
+        muC += w[i] * cam_pts[i];
+    }
+    muL /= wsum; muC /= wsum;
+
+    Eigen::Matrix3d Sigma = Eigen::Matrix3d::Zero();
+    for (size_t i = 0; i < N; ++i) 
+    {
+        Eigen::Vector3d l = lidar_pts[i] - muL;
+        Eigen::Vector3d c = cam_pts[i] - muC;
+        Sigma += w[i] * (l * c.transpose());
+    }
+
+    Eigen::JacobiSVD<Eigen::Matrix3d> svd(Sigma, Eigen::ComputeFullU | Eigen::ComputeFullV);
+    Eigen::Matrix3d U = svd.matrixU();
+    Eigen::Matrix3d V = svd.matrixV();
+    Eigen::Matrix3d R = V * U.transpose();
+    if (R.determinant() < 0) 
+    {
+        Eigen::Matrix3d D = Eigen::Matrix3d::Identity();
+        D(2,2) = -1;
+        R = V * D * U.transpose();
+    }
+    Eigen::Vector3d t = muC - R * muL;
+
+    double rss = 0.0;
+    for (size_t i = 0; i < N; ++i) 
+    {
+        Eigen::Vector3d r = (R * lidar_pts[i] + t) - cam_pts[i];
+        rss += w[i] * r.squaredNorm();
+    }
+    out.R = R; out.t = t; out.rms = std::sqrt(rss / wsum); out.ok = true;
+    return out;
+}
+
+static bool parseCentersLine(const std::string& line, std::vector<Eigen::Vector3d>& out_pts)
 {
     // 支持形如：lidar_centers: {x,y,z} {x,y,z} {x,y,z} {x,y,z}
     // 或 qr_centers: {x,y,z} {x,y,z} ...
@@ -42,24 +107,14 @@ static bool parseCentersLine(const std::string& line, std::vector<Vector3d>& out
     return !out_pts.empty();
 }
 
-struct Block {
-  std::string time_line;
-  std::vector<Vector3d> lidar_pts; // 4
-  std::vector<Vector3d> qr_pts;    // 4
-};
-
 int main(int argc, char** argv)
 {
     ros::init(argc, argv, "multi_fast_calib");
     ros::NodeHandle nh;
     Params params = loadParameters(nh);
 
-    DataPreprocessPtr dataPreprocessPtr;
-    dataPreprocessPtr.reset(new DataPreprocess(params));
-    cv::Mat img_input = dataPreprocessPtr->img_input_;
-
-    if (params.midresult_path.back() != '/') params.midresult_path += '/';
-    std::string midtxt_path = params.midresult_path + "circle_center_record.txt";
+    if (params.output_path.back() != '/') params.output_path += '/';
+    std::string midtxt_path = params.output_path + "circle_center_record.txt";
 
     if (params.output_path.back() != '/') params.output_path += '/';
     std::string multi_output_path = params.output_path + "multi_calib_result.txt";
@@ -110,7 +165,7 @@ int main(int argc, char** argv)
     }
 
     // 取最后3个 block
-    std::vector<Vector3d> L, C;
+    std::vector<Eigen::Vector3d> L, C;
     for (size_t k = blocks.size() - 3; k < blocks.size(); ++k) 
     {
         const auto& b = blocks[k];
@@ -126,16 +181,14 @@ int main(int argc, char** argv)
         return 1;
     }
 
-
-    std::cout << "Lidar centers (L):" << std::endl;
+    std::cout << "LiDAR centers:" << std::endl;
     for (size_t i = 0; i < L.size(); ++i) {
         std::cout << "L[" << i << "]: (" << L[i](0) << ", " << L[i](1) << ", " << L[i](2) << ")" << std::endl;
     }
-    std::cout << "QR centers (C):" << std::endl;
+    std::cout << "QR centers:" << std::endl;
     for (size_t i = 0; i < C.size(); ++i) {
         std::cout << "C[" << i << "]: (" << C[i](0) << ", " << C[i](1) << ", " << C[i](2) << ")" << std::endl;
     }
-
 
     // 一次性求解
     auto res = SolveRigidTransformWeighted(L, C, nullptr);
@@ -152,26 +205,13 @@ int main(int argc, char** argv)
     std::cout << BOLDYELLOW << "[Result] RMSE: " << BOLDRED << std::fixed << std::setprecision(4)
       << res.rms << " m" << RESET << std::endl;
 
-    std::cout << BOLDYELLOW << "[Result] multi_scene_calib extrinsic parameters T_cam_lidar: " << RESET << std::endl;
+    std::cout << BOLDYELLOW << "[Result] Multi-scene calibration: extrinsic parameters T_cam_lidar = " << RESET << std::endl;
     std::cout << BOLDCYAN << std::fixed << std::setprecision(6) << T << RESET << std::endl;
 
     std::ofstream fout(multi_output_path);
     if (fout.is_open()) 
     {
         fout << "# FAST-LIVO2 calibration format\n";
-        fout << "cam_model: Pinhole\n";
-        fout << "cam_width: " << img_input.cols << "\n";
-        fout << "cam_height: " << img_input.rows << "\n";
-        fout << "scale: 1.0\n";
-        fout << "cam_fx: " << params.fx << "\n";
-        fout << "cam_fy: " << params.fy << "\n";
-        fout << "cam_cx: " << params.cx << "\n";
-        fout << "cam_cy: " << params.cy << "\n";
-        fout << "cam_d0: " << params.k1 << "\n";
-        fout << "cam_d1: " << params.k2 << "\n";
-        fout << "cam_d2: " << params.p1 << "\n";
-        fout << "cam_d3: " << params.p2 << "\n";
-
         fout << std::fixed << std::setprecision(6);
         fout << "Rcl: [ "
             << std::setw(9) << res.R(0,0) << ", " << std::setw(9) << res.R(0,1) << ", " << std::setw(9) << res.R(0,2) << ",\n"
@@ -180,7 +220,7 @@ int main(int argc, char** argv)
         fout << "Pcl: [ "
             << std::setw(9) << res.t(0) << ", " << std::setw(9) << res.t(1) << ", " << std::setw(9) << res.t(2) << "]\n";
         fout.close();
-        std::cout << BOLDYELLOW << "[Result] Saved multi_scene calibration results to " << BOLDWHITE << multi_output_path << RESET << std::endl;
+        std::cout << BOLDYELLOW << "[Result] Multi-scene calibration results saved to " << BOLDWHITE << multi_output_path << RESET << std::endl;
     } else {
         ROS_WARN("Failed to write out file: %s", multi_output_path.c_str());
     }

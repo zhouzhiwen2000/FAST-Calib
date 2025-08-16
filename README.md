@@ -27,25 +27,33 @@ In short, it makes extrinsic calibration as simple as intrinsic calibration.
 PCL>=1.8, OpenCV>=4.0.
 
 ## 2. Run our examples
-1. Prepare the static acquisition data in `calib_data` folder (see [sample data](https://connecthkuhk-my.sharepoint.com/:f:/g/personal/zhengcr_connect_hku_hk/Eq_k_4Mf_11Eggg4a5lbRzgBHwd0EivtCJd2ExtcNlu1FA?e=vjm4gH) from Mid360, Avia and Ouster):
+1. Prepare the static acquisition data in the `calib_data` folder (see [Single-scene Calibration Sample Data](https://connecthkuhk-my.sharepoint.com/:f:/g/personal/zhengcr_connect_hku_hk/Eq_k_4Mf_11Eggg4a5lbRzgBHwd0EivtCJd2ExtcNlu1FA?e=vjm4gH) from Mid360, Avia and Ouster, and [Multi-scene Calibration Sample Data](https://pan.baidu.com/s/1Mkw7EWfiFT68LEzdkQnxeg?pwd=nyuh) from Avia):
 - rosbag containing point cloud messages
 - corresponding image
 
-2. Run the calibration process:
+2. Run the single-scene calibration process:
 ```bash
 roslaunch fast_calib calib.launch
 ```
 
+3. After completing Step 2 for at least three different scenes, you can perform multi-scene joint calibration:
+```bash
+roslaunch fast_calib multi_calib.launch
+```
+
 ## 3. Run on your own sensor suite
-1. Customize the calibration target in the image below.
-2. Record data to rosbag.
+1. Customize the calibration target in the image below, with the CAD model available [here](https://pan.baidu.com/s/14Q2zmEfY6Z2O5Cq4wgVljQ?pwd=2hhn).
+2. Collect data from three scenes, with placement illustrated below, and record them into the corresponding rosbags.
 3. Provide the instrinsic matrix in `qr_params.yaml`.
 4. Set distance filter in `qr_params.yaml` for board point cloud (extra points are acceptable).
 5. Calibrate now!
-
 <p align="center">
   <img src="./pics/calibration_target.jpg" width="100%">
   <font color=#a0a0a0 size=2>Left: Actual calibration target | Right: Technical drawing with annotated dimensions.</font>
+</p>
+<p align="center">
+  <img src="./pics/multi-scene.jpg" width="100%">
+  <font color=#a0a0a0 size=2>Placement of the calibration target for multi-scene data collection: (a) facing forward, (b) oriented to the right, (c) oriented to the left.</font>
 </p>
 
 ## 4. Appendix
