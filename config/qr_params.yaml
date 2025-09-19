@@ -30,14 +30,14 @@
   # p2: -0.000201478932371979
 
   # multi-scene
-  fx: 2478.48702288166
-  fy: 2478.58544825456
-  cx: 1230.99707596681
-  cy: 1025.66149498072
-  k1: -0.0493178189623200
-  k2: 0.147394487986097
-  p1: -0.00127118592043482
-  p2: -0.00200379689523022
+  fx: 1114.11498
+  fy: 1114.69108
+  cx: 951.77942
+  cy: 538.79078
+  k1: 0.062267
+  k2: -0.060304
+  p1: 0.000877
+  p2: 0.001529
 
 # Calibration target parameters
   marker_size: 0.20 # ArUco marker size (our test data uses 0.16m; adjust to match your marker size)
@@ -70,17 +70,17 @@
   # z_min: 0.0
   # z_max: 2.0
 # multi_scene_33
-  x_min: 2.0
-  x_max: 5.0
-  y_min: -1.0
-  y_max: 4.0
-  z_min: 0.0
+  x_min: 1.5
+  x_max: 3
+  y_min: -2.0
+  y_max: 2.0
+  z_min: 0.3
   z_max: 2.0
 
 # Input
   lidar_topic: "/livox/lidar" # /ouster/points /livox/lidar
-  bag_path: "$(find fast_calib)/calib_data/avia_multi_scene/33.bag"
-  image_path: "$(find fast_calib)/calib_data/avia_multi_scene/33.jpg"
+  bag_path: "$(find fast_calib)/calib_data/1111.bag"
+  image_path: "$(find fast_calib)/calib_data/1111.jpg"
 
 # Output
   output_path: "$(find fast_calib)/output"
